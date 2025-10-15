@@ -2,6 +2,7 @@
 import {
   Model
 } from 'sequelize';
+
 export default (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -11,6 +12,8 @@ export default (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      //       this.hasMany(models.Product, { foreignKey: 'sellerId', as: 'products' });
+      // this.hasMany(models.Order, { foreignKey: 'buyerId', as: 'orders' });
     }
 
     getFullName() {
@@ -31,6 +34,23 @@ export default (sequelize, DataTypes) => {
       const { password, verificationToken, privateKey, ...safeData } = this.toJSON();
       return safeData;
     }
+
+        /**
+     * Assign role dynamically
+     */
+    async assignRole(role) {
+      if (!this.roles.includes(role)) {
+        this.roles.push(role);
+        await this.save();
+      }
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    hasRole(role) {
+      return this.roles.includes(role);
+    }
   }
   User.init({
     email: DataTypes.STRING,
@@ -45,7 +65,8 @@ export default (sequelize, DataTypes) => {
     lastLoginAt: DataTypes.DATE,
     isverified: DataTypes.BOOLEAN,
     verificationToken: DataTypes.STRING,
-    emailVerifiedAt: DataTypes.DATE
+    emailVerifiedAt: DataTypes.DATE,
+    roles: DataTypes.ARRAY(DataTypes.STRING)
   }, {
     sequelize,
     modelName: 'User',
