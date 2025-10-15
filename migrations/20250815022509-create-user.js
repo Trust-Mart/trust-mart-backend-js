@@ -1,5 +1,7 @@
 'use strict';
 
+import { UserRoles } from '../utils/types.js';
+
 /** @type {import('sequelize-cli').Migration} */
   export async function up(queryInterface, Sequelize) {
     await queryInterface.createTable('users', {
@@ -56,6 +58,11 @@
       emailVerifiedAt: {
         type: Sequelize.DATE,
         allowNull: true
+      },
+      roles: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: false,
+        default: [UserRoles.buyer]
       },
       country: {
         type: Sequelize.STRING,
