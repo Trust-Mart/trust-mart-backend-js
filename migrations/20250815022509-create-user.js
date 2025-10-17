@@ -82,17 +82,17 @@ import { UserRoles } from '../utils/types.js';
       }
     });
 
-  await queryInterface.addIndex('Users', ['email'], {
+  await queryInterface.addIndex('users', ['email'], {
     name: 'users_email_index',
     unique: true
   });
 
-  await queryInterface.addIndex('Users', ['username'], {
+  await queryInterface.addIndex('users', ['username'], {
     name: 'users_username_index',
     unique: true
   });
 
-  await queryInterface.addIndex('Users', ['walletAddress'], {
+  await queryInterface.addIndex('users', ['walletAddress'], {
     name: 'users_wallet_address_index',
     where: {
       walletAddress: {
@@ -101,7 +101,7 @@ import { UserRoles } from '../utils/types.js';
     }
   });
 
-  await queryInterface.addIndex('Users', ['smartAccountAddress'], {
+  await queryInterface.addIndex('users', ['smartAccountAddress'], {
     name: 'users_smart_account_address_index',
     where: {
       smartAccountAddress: {
@@ -110,7 +110,7 @@ import { UserRoles } from '../utils/types.js';
     }
   });  
 
-    await queryInterface.addIndex('Users', ['smartAccountBalance'], {
+    await queryInterface.addIndex('users', ['smartAccountBalance'], {
     name: 'users_smart_account_balance_index',
     where: {
       smartAccountBalance: {
