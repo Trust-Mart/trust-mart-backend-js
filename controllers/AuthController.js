@@ -5,7 +5,6 @@ import { ApiResponse } from '../utils/apiResponse.js';
 import LoginValidationService from '../services/validation/LoginValidationService.js';
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { UserRoles } from '../utils/types.js';
 
 export const register = async (req, res) => {
     try {
@@ -298,7 +297,7 @@ export const verifyPin = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     return token

@@ -3,11 +3,12 @@ import cors from "cors"
 import dotenv from "dotenv"
 import db from './models/index.js';
 import authRoutes from "./routes/auth.js"
+import productRoutes from "./routes/products.js"
 // import transactionRoutes from "./routes/transactions.js"
-// import userRoutes from "./routes/users.js"
+import userRoutes from "./routes/users.js"
 // import clientRoutes from "./routes/clients.js"
 // import invoiceRoutes from "./routes/invoices.js"
-// import authenticateToken from "./middleware/AuthMiddleware.js";
+import authenticateToken from "./middleware/AuthMiddleware.js";
 // import job from "./config/cron.js";
 
 dotenv.config()
@@ -46,8 +47,9 @@ const initializeDatabase = async () => {
 
 // Routes
 app.use(`${url}/auth`, authRoutes)
+app.use(`${url}/products`, authenticateToken, productRoutes)
 // app.use(`${url}/transactions`, authenticateToken, transactionRoutes)
-// app.use(`${url}/user`, authenticateToken, userRoutes)
+app.use(`${url}/users`, authenticateToken, userRoutes)
 // app.use(`${url}/clients`, authenticateToken, clientRoutes)
 // app.use(`${url}/invoices`, authenticateToken, invoiceRoutes)
 
