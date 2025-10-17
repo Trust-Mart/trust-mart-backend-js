@@ -2,6 +2,7 @@
 import {
   Model
 } from 'sequelize';
+import { AuthMethod } from '../utils/types.js';
 
 export default (sequelize, DataTypes) => {
   class User extends Model {
@@ -53,6 +54,7 @@ export default (sequelize, DataTypes) => {
     }
   }
   User.init({
+    social_id: DataTypes.STRING,
     email: DataTypes.STRING,
     username: DataTypes.STRING,
     password: DataTypes.STRING,
@@ -66,7 +68,12 @@ export default (sequelize, DataTypes) => {
     isverified: DataTypes.BOOLEAN,
     verificationToken: DataTypes.STRING,
     emailVerifiedAt: DataTypes.DATE,
-    roles: DataTypes.ARRAY(DataTypes.STRING)
+    roles: DataTypes.ARRAY(DataTypes.STRING),
+    auth_method: DataTypes.ENUM(
+      AuthMethod.regular,
+      AuthMethod.social,
+      AuthMethod.both
+    )
   }, {
     sequelize,
     modelName: 'User',

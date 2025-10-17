@@ -5,7 +5,7 @@ import db from '../models/index.js';
 import { BASE_URL } from '../utils/constants.js';
 import SmartAccountService from './SmartAccountService.js';
 import EncryptionService from './EncryptionService.js';
-import { UserRoles } from '../utils/types.js';
+import { AuthMethod, UserRoles } from '../utils/types.js';
 
 const { User } = db;
 
@@ -90,9 +90,45 @@ class UserService {
     }
   }
 
-//   static generateVerificationLink(email, token) {
-//     return `${BASE_URL}/auth/verify-email?email=${encodeURIComponent(email)}&token=${token}`;
-//   }
+  static async createSocialUser(userData) {
+    try {
+      const baseUsername = userData.email.split('@')[0];
+      let username = baseUsername;
+
+      const userDataWithUsername = {
+        ...userData,
+        username,
+        verificationToken: userData.verificationToken || this.generateOTP(),
+        verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      };
+
+      const user = await User.create(userDataWithUsername);
+      return user;
+    } catch (error) {
+      console.error('Error creating social user:', error);
+      throw error;
+    }
+  }
+
+  static async linkGoogleAccount(userId, googleId) {
+    try {
+      const user = await User.findByPk(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      await user.update({
+        social_id: googleId,
+        // profilePicture: profile.photos[0]?.value,
+        authMethod: AuthMethod.both
+      });
+      
+      return user;
+    } catch (error) {
+      console.error('Error linking Google account:', error);
+      throw error;
+    }
+  }
 
   static async findUserByEmail(email) {
     try {
@@ -113,6 +149,36 @@ class UserService {
     } catch (error) {
       console.error('Error finding user by username:', error);
       throw new Error('Database error occurred');
+    }
+  }
+
+    static async findUserByGoogleId(googleId) {
+    try {
+      const user = await User.findOne({ where: { googleId } });
+      return user;
+    } catch (error) {
+      console.error('Error finding user by Google ID:', error);
+      throw error;
+    }
+  }
+
+  static async handleSocialVerification(userId) {
+    try {
+      const user = await User.findByPk(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      await user.update({
+        isverified: true,
+        verificationToken: null,
+        verificationTokenExpires: null
+      });
+      
+      return user;
+    } catch (error) {
+      console.error('Error handling social verification:', error);
+      throw error;
     }
   }
 

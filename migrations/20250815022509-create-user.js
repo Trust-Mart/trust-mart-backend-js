@@ -1,6 +1,6 @@
 'use strict';
 
-import { UserRoles } from '../utils/types.js';
+import { AuthMethod, UserRoles } from '../utils/types.js';
 
 /** @type {import('sequelize-cli').Migration} */
   export async function up(queryInterface, Sequelize) {
@@ -10,6 +10,11 @@ import { UserRoles } from '../utils/types.js';
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.BIGINT
+      },
+      social_id: {
+        type: Sequelize.STRING,
+        unique: true,
+        allowNull: true
       },
       email: {
         type: Sequelize.STRING,
@@ -72,6 +77,13 @@ import { UserRoles } from '../utils/types.js';
         type: Sequelize.DATE,
         allowNull: true
       },
+      auth_method: {
+        type: Sequelize.ENUM(
+          AuthMethod.regular,
+          AuthMethod.social,
+          AuthMethod.both
+        )
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -92,7 +104,7 @@ import { UserRoles } from '../utils/types.js';
     unique: true
   });
 
-  await queryInterface.addIndex('Users', ['walletAddress'], {
+  await queryInterface.addIndex('users', ['walletAddress'], {
     name: 'users_wallet_address_index',
     where: {
       walletAddress: {
@@ -101,7 +113,7 @@ import { UserRoles } from '../utils/types.js';
     }
   });
 
-  await queryInterface.addIndex('Users', ['smartAccountAddress'], {
+  await queryInterface.addIndex('users', ['smartAccountAddress'], {
     name: 'users_smart_account_address_index',
     where: {
       smartAccountAddress: {
@@ -110,7 +122,16 @@ import { UserRoles } from '../utils/types.js';
     }
   });  
 
-    await queryInterface.addIndex('Users', ['smartAccountBalance'], {
+    await queryInterface.addIndex('users', ['social_id'], {
+    name: 'users_social_id_index',
+    where: {
+      smartAccountAddress: {
+        [Sequelize.Op.ne]: null
+      }
+    }
+  });  
+
+    await queryInterface.addIndex('users', ['smartAccountBalance'], {
     name: 'users_smart_account_balance_index',
     where: {
       smartAccountBalance: {

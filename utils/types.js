@@ -53,3 +53,9 @@ export const UserRoles = {
   buyer: 'buyer',
   seller: 'seller',
 }
+
+export const AuthMethod = {
+  social: 'social',
+  regular: 'regular',
+  both: 'both'
+}

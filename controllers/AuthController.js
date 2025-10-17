@@ -3,9 +3,10 @@ import UserService from '../services/UserService.js';
 import EmailService from '../services/EmailService.js';
 import { ApiResponse } from '../utils/apiResponse.js';
 import LoginValidationService from '../services/validation/LoginValidationService.js';
+import passport from '../config/passport.js';
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { UserRoles } from '../utils/types.js';
+import { AuthMethod } from '../utils/types.js';
 
 export const register = async (req, res) => {
     try {
@@ -285,7 +286,244 @@ export const verifyPin = async (req, res) => {
   }
 };
 
+export const googleAuth = (req, res, next) => {
+  const state = req.query.country ? JSON.stringify({ country: req.query.country }) : undefined;
+  
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    state: state
+  })(req, res, next);
+};
+
+export const googleCallback = (req, res, next) => {
+  passport.authenticate('google', { session: false }, async (err, user, info) => {
+    try {
+      if (err) {
+        console.error('Google auth error:', err);
+        return redirectWithError(res, 'Authentication failed');
+      }
+
+      if (!user) {
+        return redirectWithError(res, 'Google authentication failed');
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+
+      if (user.isNewUser) {
+
+        try {
+          await EmailService.sendVerificationEmail(
+            user.email,
+            user.username,
+            user.verificationToken
+          );
+          
+          console.log(`Verification email sent to ${user.email} for social signup`);
+        } catch (emailError) {
+          console.error('Failed to send verification email for social signup:', emailError);
+        }
+
+        return res.redirect(`${frontendUrl}/auth/social-signup-success?email=${encodeURIComponent(user.email)}&type=google`);
+      }
+
+      if (user.needsVerification) {
+        // Existing user but not verified - resend verification
+        try {
+          await EmailService.sendVerificationEmail(
+            user.email,
+            user.username,
+            user.verificationToken
+          );
+          
+          return res.redirect(`${frontendUrl}/auth/verification-resent?email=${encodeURIComponent(user.email)}`);
+        } catch (emailError) {
+          console.log('Failed to resend verification email:', emailError);
+          // return redirectWithError(res, 'Failed to send verification email');
+        }
+      }
+
+      if (user.wasLinked) {
+        const token = generateJwtToken(user);
+        await UserService.updateLastLogin(user.id);
+        
+        return res.redirect(`${frontendUrl}/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          isverified: user.isverified,
+          message: 'Google account linked successfully'
+        }))}`);
+      }
+
+      if (user.isverified) {
+        const token = generateJwtToken(user);
+        await UserService.updateLastLogin(user.id);
+        
+        return res.redirect(`${frontendUrl}/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          isverified: user.isverified
+        }))}`);
+      }
+
+      return redirectWithError(res, 'Authentication failed');
+
+    } catch (error) {
+      console.error('Google callback error:', error);
+      return redirectWithError(res, 'Authentication failed');
+    }
+  })(req, res, next);
+};
+
+export const googleSignup = async (req, res) => {
+  try {
+    const { token, country } = req.body;
+
+    if (!token) {
+      return ApiResponse.badRequest(res, 'Google token is required');
+    }
+
+    // Verify the Google token
+    const { OAuth2Client } = await import('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const googleId = payload.sub;
+    const email = payload.email;
+    // const name = payload.name;
+    const picture = payload.picture;
+
+    let user = await UserService.findUserByGoogleId(googleId);
+
+    if (user) {
+      if (user.isverified) {
+        const jwtToken = generateJwtToken(user);
+        await UserService.updateLastLogin(user.id);
+
+        return ApiResponse.success(res, {
+          message: 'Login successful',
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            isverified: user.isverified,
+            // profilePicture: user.profilePicture,
+            auth_method: user.auth_method
+          },
+          token: jwtToken
+        });
+      } else {
+        try {
+          await EmailService.sendVerificationEmail(
+            user.email,
+            user.username,
+            user.verificationToken
+          );
+
+          return ApiResponse.success(res, {
+            message: 'Verification email sent. Please check your email to verify your account.',
+            user: {
+              id: user.id,
+              email: user.email,
+              isverified: user.isverified
+            },
+            needsVerification: true
+          });
+        } catch (emailError) {
+          console.error('Failed to send verification email:', emailError);
+          return ApiResponse.serverError(res, 'Failed to send verification email');
+        }
+      }
+    }
+
+    user = await UserService.findUserByEmail(email);
+    
+    if (user) {
+      if (user.authMethod === 'email' && !user.googleId) {
+        user = await UserService.linkGoogleAccount(user.id, googleId, {
+          photos: [{ value: picture }]
+        });
+
+        const jwtToken = generateJwtToken(user);
+        await UserService.updateLastLogin(user.id);
+
+        return ApiResponse.success(res, {
+          message: 'Google account linked successfully',
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            isverified: user.isverified,
+            // profilePicture: user.profilePicture,
+            auth_method: user.auth_method
+          },
+          token: jwtToken
+        });
+      }
+    }
+
+    // Create new social signup user (unverified)
+    const newUser = await UserService.createSocialUser({
+      social_id: googleId,
+      email: email,
+      username: email.split('@')[0],
+      password: null,
+      isverified: false,
+      verificationToken: UserService.generateOTP(),
+      // profilePicture: picture,
+      auth_method: AuthMethod.social,
+      country: country ?? null
+    });
+
+    try {
+      await EmailService.sendVerificationEmail(
+        newUser.email,
+        newUser.username,
+        newUser.verificationToken
+      );
+      
+      console.log(`Verification email sent to ${newUser.email} for social signup`);
+    } catch (emailError) {
+      console.log('Failed to send verification email for social signup:', emailError);
+      // Continue anyway - we'll queue in production
+    }
+
+    return ApiResponse.success(res, {
+      message: 'Social signup successful. Please check your email to verify your account.',
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        isverified: newUser.isverified,
+        // profilePicture: newUser.profilePicture,
+        auth_method: newUser.auth_method
+      },
+      needsVerification: true
+    }, 201);
+
+  } catch (error) {
+    console.error('Google signup error:', error);
+    
+    if (error.message.includes('invalid token')) {
+      return ApiResponse.unauthorized(res, 'Invalid Google token');
+    }
+    
+    return ApiResponse.serverError(res, 'Social signup failed. Please try again.');
+  }
+};
+
   // helpers
+const redirectWithError = (res, message) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  return res.redirect(`${frontendUrl}/auth/error?message=${encodeURIComponent(message)}`);
+};
+
   function generateJwtToken(user) {
     const JWT_SECRET = process.env.JWT_SECRET;
     if (typeof JWT_SECRET !== 'string') {
