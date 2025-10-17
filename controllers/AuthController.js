@@ -5,7 +5,6 @@ import { ApiResponse } from '../utils/apiResponse.js';
 import LoginValidationService from '../services/validation/LoginValidationService.js';
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { UserRoles } from '../utils/types.js';
 
 export const register = async (req, res) => {
     try {
