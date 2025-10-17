@@ -1,0 +1,397 @@
+{
+  "info": {
+    "name": "TrustMart AI System",
+    "description": "Complete API collection for TrustMart AI-powered seller verification system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3033/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('jwt_token', response.token);",
+                  "        console.log('JWT token saved:', response.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Services",
+      "item": [
+        {
+          "name": "Link Instagram Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"instagram\",\n  \"accountData\": {\n    \"username\": \"testuser_ig\",\n    \"id\": \"ig_123456789\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/social/link",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "social", "link"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Link Facebook Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"facebook\",\n  \"accountData\": {\n    \"name\": \"Test User\",\n    \"id\": \"fb_123456789\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/social/link",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "social", "link"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Link WhatsApp Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"whatsapp\",\n  \"accountData\": {\n    \"phone_number\": \"+2348123456789\",\n    \"display_name\": \"Test User\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/social/link",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "social", "link"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Linked Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/social/accounts",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "social", "accounts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Monitor Legitimacy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/legitimacy/monitor",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "legitimacy", "monitor"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Monitor Behavior",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/behavior/monitor",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "behavior", "monitor"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate Seller Score",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/seller/score",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "seller", "score"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seller Score",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/seller/score",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "seller", "score"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Top Sellers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ai/seller/top?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "seller", "top"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get AI Insights",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/insights",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "insights"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"description\": \"This is a test product for AI verification\",\n  \"price\": 100,\n  \"quantity\": 5,\n  \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Product with AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/product/verify",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "product", "verify"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Process AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/batch/process",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "batch", "process"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

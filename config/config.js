@@ -1,4 +1,5 @@
 import dotenv from "dotenv/config";
+import betterSqlite3 from "better-sqlite3";
 
 console.log('🔍 Environment Variables Debug:');
 console.log('DB_USER:', process.env.DB_USER, 'Type:', typeof process.env.DB_USER);
@@ -9,8 +10,9 @@ console.log('DB_PORT:', process.env.DB_PORT, 'Type:', typeof process.env.DB_PORT
 console.log('NODE_ENV:', process.env.NODE_ENV, 'Type:', typeof process.env.NODE_ENV);
 console.log('DATABASE_URL:', process.env.DATABASE_URL ? '***' : 'UNDEFINED');
 
-// Validate required environment variables
-const requiredEnvVars = ['DB_USER', 'DB_PASSWORD', 'DB_NAME', 'DB_HOST'];
+// Validate required environment variables (skip for SQLite)
+const isSQLite = process.env.DB_DIALECT === 'sqlite';
+const requiredEnvVars = isSQLite ? ['DB_NAME'] : ['DB_USER', 'DB_PASSWORD', 'DB_NAME', 'DB_HOST'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -20,39 +22,45 @@ if (missingVars.length > 0) {
 
 export default {
   development: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    username: isSQLite ? undefined : process.env.DB_USER,
+    password: isSQLite ? undefined : process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    host: process.env.DB_HOST,
+    port: isSQLite ? undefined : process.env.DB_PORT,
+    host: isSQLite ? undefined : process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
-    logging: console.log
+    logging: console.log,
+    storage: isSQLite ? process.env.DB_NAME : undefined,
+    dialectModule: isSQLite ? betterSqlite3 : undefined
   },
   test: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    username: isSQLite ? undefined : process.env.DB_USER,
+    password: isSQLite ? undefined : process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    host: process.env.DB_HOST,
+    port: isSQLite ? undefined : process.env.DB_PORT,
+    host: isSQLite ? undefined : process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
-    logging: false
+    logging: false,
+    storage: isSQLite ? process.env.DB_NAME : undefined,
+    dialectModule: isSQLite ? betterSqlite3 : undefined
   },
   production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    username: isSQLite ? undefined : process.env.DB_USER,
+    password: isSQLite ? undefined : process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    host: process.env.DB_HOST,
+    port: isSQLite ? undefined : process.env.DB_PORT,
+    host: isSQLite ? undefined : process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
-    dialectOptions: {
+    storage: isSQLite ? process.env.DB_NAME : undefined,
+    dialectModule: isSQLite ? betterSqlite3 : undefined,
+    dialectOptions: isSQLite ? undefined : {
       ssl: {
         require: true,
         rejectUnauthorized: false // This is crucial for Render
       }
     },
-    ssl: true,
+    ssl: isSQLite ? undefined : true,
     logging: false, // Disable logging in production for better performance
-    pool: {
+    pool: isSQLite ? undefined : {
       max: 5,
       min: 0,
       acquire: 30000,
