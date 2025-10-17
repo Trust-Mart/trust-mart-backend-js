@@ -52,4 +52,15 @@ export const CurrencyType = {
 export const UserRoles = {
   buyer: 'buyer',
   seller: 'seller',
+  admin: 'admin',
+  sub_admin: 'sub_admin',
+
+}
+
+export const ProductStatus = {
+  active: 'active',
+  sold_out: 'sold_out',
+  under_review: 'under_review',
+  paused: 'paused',
+  flagged: 'flagged'
 }
