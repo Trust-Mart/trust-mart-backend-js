@@ -31,7 +31,7 @@ export const createProduct = async (req, res) => {
     }
 
     const { validatedData } = validation;
-    validatedData.status = ProductStatus.active;
+    validatedData.status = ProductStatus.under_review;
 
     const result = await ProductService.createProduct(validatedData);
 
