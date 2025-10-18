@@ -19,8 +19,15 @@ export default (sequelize, DataTypes) => {
         as: 'seller',
         onDelete: 'CASCADE'
       });
+
+      Product.hasOne(models.ProductDelivery, {
+        foreignKey: 'product_id',
+        as: 'product',
+        onDelete: 'CASCADE'
+      })
     }
   }
+
   Product.init({
     seller_id: DataTypes.BIGINT,
     name: DataTypes.STRING,

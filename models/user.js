@@ -13,6 +13,7 @@ export default (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
           User.hasMany(models.Product, { foreignKey: 'seller_id', as: 'products' });
+          User.hasMany(models.ProductDelivery, { foreignKey: 'seller_id', as: 'product_deliveries' });
       // this.hasMany(models.Order, { foreignKey: 'buyerId', as: 'orders' });
     }
 
