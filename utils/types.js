@@ -64,3 +64,10 @@ export const ProductStatus = {
   paused: 'paused',
   flagged: 'flagged'
 }
+
+export const DeliveryStatus = {
+  pending: 'pending', 
+  in_transit:'in_transit', 
+  delivered: 'delivered', 
+  disputed: 'disputed'
+}
