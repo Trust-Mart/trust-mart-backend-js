@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.9",
     "sequelize": "^6.37.7",
+    "util": "^0.12.5",
     "viem": "^2.38.2"
   },
   "devDependencies": {
