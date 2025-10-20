@@ -597,8 +597,8 @@ async createEscrowPurchase({
         amount,
         metadataUri,
         status,
-        isDisputed,
-        releaseAfter
+        releaseAfter,
+        disputeInfo
       ] = await Promise.all([
         escrowContract.read.factory(),
         escrowContract.read.buyer(),
@@ -607,8 +607,8 @@ async createEscrowPurchase({
         escrowContract.read.amount(),
         escrowContract.read.metadataUri(),
         escrowContract.read.status(),
-        escrowContract.read.isDisputed(),
-        escrowContract.read.releaseAfter()
+        escrowContract.read.releaseAfter(),
+        escrowContract.read.getDisputeInfo(),
       ]);
 
       const balance = await escrowContract.read.getBalance();
@@ -621,11 +621,10 @@ async createEscrowPurchase({
         amount: amount.toString(),
         metadataUri,
         status: this.getStatusString(status),
-        isDisputed,
         releaseAfter: Number(releaseAfter),
         balance: balance.toString(),
         canAutoRelease: await escrowContract.read.canAutoRelease(),
-        timeLeft: await escrowContract.read.getTimeLeftUntilRelease()
+        disputeInfo: disputeInfo
       };
 
     } catch (error) {
