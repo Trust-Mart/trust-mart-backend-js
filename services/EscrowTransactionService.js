@@ -4,7 +4,7 @@ import db from '../models/index.js';
 import { Op } from 'sequelize';
 import { ethers } from 'ethers';
 import crypto from 'crypto';
-import { OrderStatus, PaymentStatus } from '../utils/types.js';
+import { OrderStatus, PaymentStatus, TransactionType } from '../utils/types.js';
 import SmartAccountService from './SmartAccountService.js';
 
 const { User, Transaction, Product, Order, sequelize } = db;
@@ -264,7 +264,7 @@ async createProductEscrow({
         throw new Error('Order not found');
       }
 
-      if (order.buyer_id !== buyerId) {
+      if (order.buyer_id !== buyerId.toString()) {
         throw new Error('Only buyer can release funds');
       }
 
@@ -272,7 +272,7 @@ async createProductEscrow({
         throw new Error('No escrow associated with this order');
       }
 
-      if (order.status !== 'paid') {
+      if (order.status !== OrderStatus.paid) {
         throw new Error('Order is not in paid status');
       }
 
@@ -287,19 +287,16 @@ async createProductEscrow({
         token_address: this.paymentService.supportedTokens[order.token_symbol].address,
         token_symbol: order.token_symbol,
         amount: order.amount.toString(),
-        transaction_type: 'escrow_release',
-        status: 'pending'
+        transaction_type: TransactionType.escrow_release,
+        status: PaymentStatus.pending
       }, { transaction: dbTransaction });
 
-      // Update order status to indicate release in progress
       await order.update({
-        status: 'release_pending'
+        status: OrderStatus.delivered
       }, { transaction: dbTransaction });
 
-      // Commit the initial DB state
       await dbTransaction.commit();
 
-      // Execute blockchain release (external call)
       const executionResult = await this.paymentService.releaseEscrow({
         encryptedPrivateKey: order.buyer.privateKey,
         userId: buyerId.toString(),
@@ -308,16 +305,14 @@ async createProductEscrow({
       });
 
       if (!executionResult.success) {
-        // Rollback order status if blockchain fails
-        await this.rollbackOrderStatus(orderId, 'paid');
+        await this.rollbackOrderStatus(orderId, OrderStatus.paid);
         throw new Error(`Escrow release failed: ${executionResult.error}`);
       }
 
-      // Update with successful blockchain result
       const updateTransaction = await sequelize.transaction();
       try {
         await transactionRecord.update({
-          status: 'released',
+          status: PaymentStatus.confirmed,
           blockchain_tx_hash: executionResult.transactionHash,
           user_op_hash: executionResult.userOpHash,
           block_number: executionResult.blockNumber,
@@ -327,7 +322,7 @@ async createProductEscrow({
         }, { transaction: updateTransaction });
 
         await order.update({
-          status: 'completed',
+          status: OrderStatus.completed,
           completed_at: new Date()
         }, { transaction: updateTransaction });
 
