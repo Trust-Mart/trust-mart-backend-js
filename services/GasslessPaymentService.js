@@ -10,6 +10,7 @@ import { ethers } from 'ethers';
 import EscrowFactoryABI from '../abis/EscrowFactory.json' with { type: 'json' };
 import EscrowImplementationABI from '../abis/EscrowImplementation.json' with { type: 'json' };
 import EncryptionService from './EncryptionService.js';
+import { OrderStatus } from '../utils/types.js';
 
 class GaslessPaymentService {
   constructor() {
@@ -395,7 +396,40 @@ async createEscrowPurchase({
         throw new Error('Token not supported for gasless transactions');
       }
 
-      const paymaster = await this.createPaymaster(account, client, tokenConfig);
+    const paymasterAddress = this.paymasterAddress;
+
+    const paymaster = {
+      async getPaymasterData(parameters) {
+        try {
+          const permitAmount = ethers.parseUnits('10', tokenConfig.decimals);
+          
+          console.log(`Creating permit for amount: ${permitAmount.toString()}`);
+          console.log(`Using paymaster address: ${paymasterAddress}`);
+          
+          const permitSignature = await signPermit({
+            tokenAddress: tokenConfig.address,
+            account,
+            client,
+            spenderAddress: paymasterAddress,
+            permitAmount
+          });
+
+          return {
+            paymaster: paymasterAddress,
+            paymasterData: encodePacked(
+              ["uint8", "address", "uint256", "bytes"],
+              [0, tokenConfig.address, permitAmount, permitSignature]
+            ),
+            paymasterVerificationGasLimit: 200000n,
+            paymasterPostOpGasLimit: 150000n,
+            isFinal: true,
+          };
+        } catch (error) {
+          console.error('Paymaster data creation failed:', error);
+          throw new Error(`Paymaster setup failed: ${error.message}`);
+        }
+      },
+    };
 
       const bundlerClient = createBundlerClient({
         account,
@@ -415,7 +449,6 @@ async createEscrowPurchase({
         transport: http(`https://api.pimlico.io/v2/${this.chain.id}/rpc?apikey=${process.env.PIMLICO_API_KEY}`),
       });
 
-      // Release escrow
       const userOpHash = await bundlerClient.sendUserOperation({
         account,
         calls: [{
@@ -437,7 +470,7 @@ async createEscrowPurchase({
         userOpHash: userOpHash,
         escrowAddress: escrowAddress,
         blockNumber: receipt.receipt.blockNumber.toString(),
-        action: 'released'
+        action: OrderStatus.delivered
       };
 
     } catch (error) {
