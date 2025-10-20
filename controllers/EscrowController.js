@@ -38,12 +38,13 @@ class EscrowController {
     try {
       const { orderId } = req.params;
       const buyerId = req.user.id;
-      const { password } = req.body;
+    const user = await User.findByPk(buyerId);
+      const userPassword = user.password;
 
       const result = await this.escrowService.releaseEscrow({
         buyerId,
         orderId,
-        userPassword: password
+        userPassword
       });
 
       return ApiResponse.success(res, {
