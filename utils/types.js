@@ -7,8 +7,11 @@ export const PaymentStatus = {
 }
 
 export const TransactionType = {
-    direct: 'direct',
-    invoice: 'invoice'
+  escrow_create: 'escrow_create',
+  escrow_release: 'escrow_release',
+  escrow_refund: 'escrow_refund',
+  escrow_dispute: 'escrow_dispute',
+  direct_transfer: 'direct_transfer'
 }
 
 export const TokenSymbols = {
@@ -70,4 +73,15 @@ export const DeliveryStatus = {
   in_transit:'in_transit', 
   delivered: 'delivered', 
   disputed: 'disputed'
+}
+
+export const OrderStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  shipped: 'shipped',
+  delivered: 'delivered',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  disputed: 'disputed',
+  refunded: 'refunded'
 }

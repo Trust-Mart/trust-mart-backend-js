@@ -81,13 +81,16 @@ class SmartAccountService {
       );
 
       const decryptedPrivateKey = await EncryptionService.decryptPrivateKey(
-        encryptedPrivateKey, 
+        encryptedPrivateKey,
         masterPassword
       );
+
 
       if (!EncryptionService.validatePrivateKeyFormat(decryptedPrivateKey)) {
         throw new Error('Decrypted private key has invalid format');
       }
+
+      console.log("decrypted: ", decryptedPrivateKey)
 
       return decryptedPrivateKey;
 

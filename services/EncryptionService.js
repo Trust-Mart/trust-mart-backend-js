@@ -86,6 +86,7 @@ class EncryptionService {
    * @returns {Promise<string>} The decrypted private key
    */
 static async decryptPrivateKey(encryptedData, password) {
+
     try {
       if (!encryptedData || !password) {
         throw new Error('Encrypted data and password are required');
@@ -94,8 +95,17 @@ static async decryptPrivateKey(encryptedData, password) {
       // Decode from base64
       const combined = Buffer.from(encryptedData, 'base64');
 
-      // Verify minimum length
-      const minLength = this.SALT_LENGTH + this.IV_LENGTH + this.TAG_LENGTH;
+
+    console.log('=== DECRYPTION DEBUG ===');
+    console.log('Encrypted data length:', combined.length);
+    console.log('Password provided:', password ? 'YES' : 'NO');
+    console.log('Password length:', password?.length);
+
+    // Calculate minimum expected length
+    const minLength = this.SALT_LENGTH + this.IV_LENGTH + this.TAG_LENGTH + 1;
+    console.log('Minimum expected length:', minLength);
+
+      // process.exit()
       if (combined.length < minLength) {
         throw new Error('Invalid encrypted data format');
       }
@@ -130,7 +140,7 @@ static async decryptPrivateKey(encryptedData, password) {
       console.error('Error decrypting private key:', error);
       throw new Error('Failed to decrypt private key');
     }
-  }
+  } 
 
   /**
    * Generate a secure master password for encryption
@@ -210,6 +220,44 @@ static async generateMasterPassword(userPassword, userId) {
     
     return `0x${combined}`;
   }
+
+  static async debugPasswordMismatch(encryptedData, userId, currentPassword) {
+  console.log('=== PASSWORD MISMATCH DEBUG ===');
+  
+  // Test 1: Check current master password generation
+  const currentMasterPassword = await this.generateMasterPassword(currentPassword, userId);
+  console.log('Current master password:', currentMasterPassword);
+  
+  // Test 2: Try different user ID formats
+  console.log('Testing different user ID formats:');
+  const formats = [
+    userId.toString(),
+    parseInt(userId).toString(),
+    String(userId)
+  ];
+  
+  for (const format of formats) {
+    try {
+      const testMasterPassword = await this.generateMasterPassword(currentPassword, format);
+      const decrypted = await this.decryptPrivateKey(encryptedData, testMasterPassword);
+      if (this.validatePrivateKeyFormat(decrypted)) {
+        console.log(`✅ SUCCESS with user ID format: "${format}"`);
+        return decrypted;
+      }
+    } catch (error) {
+      console.log(`❌ Failed with user ID format: "${format}"`);
+    }
+  }
+  
+  // Test 3: Check if ENCRYPTION_SECRET is the issue
+  console.log('ENCRYPTION_SECRET exists:', !!process.env.ENCRYPTION_SECRET);
+  if (process.env.ENCRYPTION_SECRET) {
+    console.log('ENCRYPTION_SECRET length:', process.env.ENCRYPTION_SECRET.length);
+  }
+  
+  console.log('================================');
+  return null;
+}
 }
 
 export default EncryptionService;
