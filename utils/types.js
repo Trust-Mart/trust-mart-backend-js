@@ -85,3 +85,11 @@ export const OrderStatus = {
   disputed: 'disputed',
   refunded: 'refunded'
 }
+
+export const SocialMediaProviders = {
+  twitter: 'twitter',
+  instagram: 'instagram',
+  facebook: 'facebook',
+  email: 'email',
+  linkedin: 'linkedin',
+}

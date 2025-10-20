@@ -4,11 +4,10 @@ import dotenv from "dotenv"
 import db from './models/index.js';
 import authRoutes from "./routes/auth.js"
 import productRoutes from "./routes/products.js"
-// import transactionRoutes from "./routes/transactions.js"
 import userRoutes from "./routes/users.js"
 import deliveryRoutes from "./routes/product_deliveries.js"
 import escrowRoutes from "./routes/escrow.js"
-// import clientRoutes from "./routes/clients.js"
+import linkedAccounttRoutes from "./routes/linked_accounts.js"
 // import invoiceRoutes from "./routes/invoices.js"
 import authenticateToken from "./middleware/AuthMiddleware.js";
 // import job from "./config/cron.js";
@@ -50,7 +49,7 @@ const initializeDatabase = async () => {
 // Routes
 app.use(`${url}/auth`, authRoutes)
 app.use(`${url}/products`, authenticateToken, productRoutes)
-// app.use(`${url}/transactions`, authenticateToken, transactionRoutes)
+app.use(`${url}/link-account`, authenticateToken, linkedAccounttRoutes)
 app.use(`${url}/users`, authenticateToken, userRoutes)
 app.use(`${url}/escrows`, authenticateToken, escrowRoutes)
 app.use(`${url}/deliveries`, authenticateToken, deliveryRoutes)
