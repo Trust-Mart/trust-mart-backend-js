@@ -12,7 +12,7 @@ export async function up(queryInterface, Sequelize) {
         type: Sequelize.BIGINT,
         allowNull: false,
         references: {
-          model: 'User',
+          model: 'users',
           key: 'id'
         }
       },
